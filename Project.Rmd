@@ -1,0 +1,6 @@
+---
+title: "STAT112 Project"
+author: "Jenny Li, Geven Liu, Wenxuan Zhu"
+date: '2022-04-16'
+output: html_document
+---
