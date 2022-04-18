@@ -4,3 +4,63 @@ author: "Jenny Li, Geven Liu, Wenxuan Zhu"
 date: '2022-04-16'
 output: html_document
 ---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r libraries}
+library(tidyverse)     # for data cleaning and plotting
+library(lubridate)     # for date manipulation
+library(openintro)     # for the abbr2state() function
+library(gplots)        # for col2hex() function
+library(RColorBrewer)  # for color palettes
+library(sf)            # for working with spatial data
+library(leaflet)       # for highly customizable mapping
+library(ggthemes)      # for more themes (including theme_map())
+library(plotly)        # for the ggplotly() - basic interactivity
+library(gganimate)     # for adding animation layers to ggplots
+library(transformr)    # for "tweening" (gganimate)
+library(gifski)        # need the library for creating gifs but don't need to load each tim
+library(readr)
+theme_set(theme_minimal())
+```
+
+```{r Data}
+Employee <- read_csv("Employee.csv")
+```
+```{r animation, eval=FALSE, fig.alt="Employees' Job Satisfaction By Department Along With Their Education Field"}
+Employee %>%
+  ggplot(
+    aes(
+      x = JobSatisfaction,
+      y = Age,
+      color = EducationField,
+      shape = EducationField
+    )
+  ) +
+  geom_point() +
+  labs(
+    title = "Employees' Job Satisfaction By Department Along With Education Field",
+    subtitle = "Department: {closest_state}",
+    x = "Satification Rate",
+    y = "Age",
+  ) +
+  theme(legend.position = "top",
+        legend.title = element_blank()) +
+  transition_states(Department, transition_length = 2,
+                    state_length = 6) +
+  exit_shrink() +
+  enter_recolor(color = "lightblue") +
+  exit_recolor(color = "lightblue")
+```
+```{r, eval=FALSE, echo=FALSE}
+anim_save("Employees' Job Satisfaction By Department Along With Education Field.gif")
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("Employees' Job Satisfaction By Department Along With Education Field.gif")
+```
+
+
