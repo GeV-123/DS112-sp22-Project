@@ -1,0 +1,75 @@
+---
+title: "Project_Tidy_Tuesday"
+author: "Wenxuan Zhu (Geven & Jenny)" 
+date: "4/6/2022"
+output: 
+  html_document:
+    df_print: paged
+    code_download: true
+    theme: cerulean
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r libraries}
+library(tidyverse)     # for graphing and data cleaning
+library(lubridate)     # for date manipulation
+library(ggthemes)      # for even more plotting themes
+theme_set(theme_minimal()) # My favorite ggplot() theme :)
+```
+
+# Read in Project Data
+```{r}
+Employee <- read_csv("Employee.csv")
+```
+
+We found this dataset in Kaggle. It is not a real dataset, but a dataset that is made by a company to mimic the real life situation of employee's income. Thus, there is no NA in the dataset and I hope use the below plot to have a general view towards the distribution of income and to see if there is any difference in the income received based on gender. 
+
+
+```{r, fig.alt= "The monthly income distributions in the dataset using a density plot with the blue line showing the mean monthly income for all workers" }
+ Employee %>% 
+  ggplot(aes(x = MonthlyIncome)) +
+  geom_histogram(aes(y=..density..), color = "#E95C20FF", fill = "#F0B67F", bins = 40) +
+  geom_vline(aes(xintercept = mean(MonthlyIncome)), color = "#4F2C1DFF", size = 1.5) +
+  geom_density(alpha=.5, fill="#006747FF") + 
+  labs(title = "Monthly Income Distributions", 
+       subtitle = "Histogram Plot",
+       x = NULL,
+       y = NULL)
+```
+```{r}
+Employee_dep <- Employee %>%
+  group_by(Department) %>%
+  mutate(ave_income_dep = mean(MonthlyIncome))
+
+ Employee_dep %>% 
+  ggplot(aes(x = MonthlyIncome, color = Gender)) +
+  geom_histogram(bins = 40, alpha = 0.8 ) +
+  geom_vline(aes(xintercept = mean(ave_income_dep)), color = "#4F2C1DFF", size = 1) +
+  facet_wrap(vars(Department)) + 
+  scale_color_manual(values = c("Female" = "#E95C20FF",
+                                "Male"="#006747FF")) + 
+  labs(title = "Monthly Income Distributions by department", 
+       subtitle = "Histogram Plot",
+       x = NULL,
+       y = NULL)
+ 
+```
+
+
+```{r}
+ Employee_dep %>% 
+  ggplot(aes(x = MonthlyIncome, color = Gender)) +
+  geom_boxplot(alpha = 0.2 ) +
+  geom_vline(aes(xintercept = mean(ave_income_dep)), color = "#4F2C1DFF", size = 1) +
+  facet_wrap(vars (Department)) + 
+  scale_color_manual(values = c("Female" = "#E95C20FF",
+                                "Male"="#006747FF")) + 
+  labs(title = "Monthly Income Distributions by department", 
+       subtitle = "Histogram Plot",
+       x = NULL,
+       y = NULL)
+```
+
