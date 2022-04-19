@@ -4,127 +4,72 @@ author: "Jenny Li, Geven Liu, Wenxuan Zhu"
 date: '2022-04-16'
 output: html_document
 ---
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggthemes) 
+library(geofacet)
+library(openintro)
+library(gplots)
+library(RColorBrewer)
+library(ggthemes)     
+library(plotly) 
+library(gganimate)
+library(gifski) 
+library(transformr) 
+library(patchwork) 
 
+Employee <- read.csv('Employee.csv')
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
 ```
 
-```{r libraries}
-library(tidyverse)     # for data cleaning and plotting
-library(lubridate)     # for date manipulation
-library(openintro)     # for the abbr2state() function
-library(gplots)        # for col2hex() function
-library(RColorBrewer)  # for color palettes
-library(sf)            # for working with spatial data
-library(leaflet)       # for highly customizable mapping
-library(ggthemes)      # for more themes (including theme_map())
-library(plotly)        # for the ggplotly() - basic interactivity
-library(gganimate)     # for adding animation layers to ggplots
-library(transformr)    # for "tweening" (gganimate)
-library(gifski)        # need the library for creating gifs but don't need to load each tim
-library(readr)
-theme_set(theme_minimal())
+
+# Monthly Income Histogram
+
+```{r, fig.alt= "The monthly income distributions in the dataset using a density plot with the blue line showing the mean monthly income for all workers" }
+ Employee %>% 
+  ggplot(aes(x = MonthlyIncome)) +
+  geom_histogram(aes(y=..density..), color = "#E95C20FF", fill = "#F0B67F", bins = 40) +
+  geom_vline(aes(xintercept = mean(MonthlyIncome)), color = "#4F2C1DFF", size = 1.5) +
+  geom_density(alpha=.5, fill="#006747FF") + 
+  labs(title = "Monthly Income Distributions", 
+       subtitle = "Histogram Plot",
+       x = NULL,
+       y = NULL)
 ```
 
-```{r Data}
-Employee <- read_csv("Employee.csv")
+# Monthly Income by department (boxplot)
+
+```{r}
+ Employee %>% 
+  ggplot(aes(x = MonthlyIncome, color = Gender)) +
+  geom_boxplot(alpha = 0.2 ) +
+  geom_vline(aes(xintercept = mean(MonthlyIncome)), color = "#4F2C1DFF", size = 1) +
+  facet_wrap(vars (Department)) + 
+  scale_color_manual(values = c("Female" = "#E95C20FF",
+                                "Male"="#006747FF")) + 
+  labs(title = "Monthly Income Distributions by department", 
+       subtitle = "Histogram Plot",
+       x = NULL,
+       y = NULL)
 ```
-##Employees' Job Satisfaction By Department Along With Their Education Field
-```{r animation, eval=FALSE, fig.alt="Employees' Job Satisfaction By Department Along With Their Education Field"}
+
+
+# Average income vs total working years by department
+
+```{r}
 Employee %>%
-  ggplot(
-    aes(
-      x = JobSatisfaction,
-      y = Age,
-      color = EducationField,
-      shape = EducationField
-    )
-  ) +
-  geom_point() +
-  labs(
-    title = "Employees' Job Satisfaction By Department Along With Education Field",
-    subtitle = "Department: {closest_state}",
-    x = "Satification Rate",
-    y = "Age",
-  ) +
-  theme(legend.position = "top",
-        legend.title = element_blank()) +
-  transition_states(Department, transition_length = 2,
-                    state_length = 6) +
-  exit_shrink() +
-  enter_recolor(color = "lightblue") +
-  exit_recolor(color = "lightblue")
+  group_by(Department,TotalWorkingYears,Attrition) %>%
+  summarize(`Average income` = mean(MonthlyIncome)) %>%
+  ggplot(aes(x=TotalWorkingYears)) +
+  geom_point(size=1,
+            aes( y=`Average income`,
+            color=Attrition))+
+  geom_smooth(aes(y=`Average income`,
+             color=Attrition),
+             se = FALSE,n=30,size=0.7)+
+  facet_wrap(~Department)+
+  theme_classic()+
+  labs(x='Total working years')
 ```
-```{r, eval=FALSE, echo=FALSE}
-anim_save("Employees' Job Satisfaction By Department Along With Education Field.gif")
-```
-
-```{r, echo=FALSE}
-knitr::include_graphics("Employees' Job Satisfaction By Department Along With Education Field.gif")
-```
-
-## Attrition
-```{r,eval=FALSE, fig.alt="Comparision of Attrited and Not Attrited Employee Number by Department over Age"}
-newEmployee <- Employee %>%
-  group_by(Department, Age) %>%
-  summarise(attrited = sum(Attrition == "Yes"),
-            notAttrited = sum(Attrition == "No")) %>%
-  mutate(newDepartment = ifelse(
-    Department == "Sales",
-    "Attrited Sales",
-    ifelse(
-      Department == "Human Resources",
-      "Attrited Human Resources",
-      ifelse(
-        Department == "Research & Development",
-        "Attrited Research & Development",
-        "NA"
-      )
-    )
-  ))
-
-
-newEmployee %>%
-  ggplot() +
-  geom_line(aes(x = Age, y = attrited, color = Department),
-            size = 1,
-            linetype = "dashed") +
-  geom_line(aes(x = Age, y = notAttrited, color = Department), size = 1) +
-  geom_text(aes(
-    x = Age,
-    y = notAttrited,
-    label = Department,
-    color = Department
-  )) +
-  geom_text(aes(
-    x = Age,
-    y = attrited,
-    label = newDepartment,
-    color = newDepartment
-  )) +
-  labs(
-    title = "Comparision of Attrited and Not Attrited Employee Number by Department over Age",
-    subtitle = "Age: {frame_along}",
-    x = "",
-    y = ""
-  )+
-  scale_color_manual(values = c("Sales" = "brown4",
-                       "Attrited Sales" = "brown4",
-                       "Human Resources" = "deepskyblue4",
-                       "Attrited Human Resources" = "deepskyblue4",
-                      "Research & Development"="gray65",
-        "Attrited Research & Development"="gray65" )) +
-   theme(legend.position = "none", plot.title = element_text(color = "#006bb3", size=12),plot.subtitle = element_text(color = "#006bb3"))+
-  transition_reveal(as.integer(Age))
-```
-```{r, eval=FALSE, echo=FALSE}
-anim_save("Comparision of Attrited and Not Attrited Employee Number by Department over Age.gif")
-```
-
-```{r, echo=FALSE}
-knitr::include_graphics("Comparision of Attrited and Not Attrited Employee Number by Department over Age.gif")
-```
-
-
 
