@@ -30,6 +30,7 @@ theme_set(theme_minimal())
 ```{r Data}
 Employee <- read_csv("Employee.csv")
 ```
+##Employees' Job Satisfaction By Department Along With Their Education Field
 ```{r animation, eval=FALSE, fig.alt="Employees' Job Satisfaction By Department Along With Their Education Field"}
 Employee %>%
   ggplot(
@@ -62,5 +63,68 @@ anim_save("Employees' Job Satisfaction By Department Along With Education Field.
 ```{r, echo=FALSE}
 knitr::include_graphics("Employees' Job Satisfaction By Department Along With Education Field.gif")
 ```
+
+## Attrition
+```{r,eval=FALSE, fig.alt="Comparision of Attrited and Not Attrited Employee Number by Department over Age"}
+newEmployee <- Employee %>%
+  group_by(Department, Age) %>%
+  summarise(attrited = sum(Attrition == "Yes"),
+            notAttrited = sum(Attrition == "No")) %>%
+  mutate(newDepartment = ifelse(
+    Department == "Sales",
+    "Attrited Sales",
+    ifelse(
+      Department == "Human Resources",
+      "Attrited Human Resources",
+      ifelse(
+        Department == "Research & Development",
+        "Attrited Research & Development",
+        "NA"
+      )
+    )
+  ))
+
+
+newEmployee %>%
+  ggplot() +
+  geom_line(aes(x = Age, y = attrited, color = Department),
+            size = 1,
+            linetype = "dashed") +
+  geom_line(aes(x = Age, y = notAttrited, color = Department), size = 1) +
+  geom_text(aes(
+    x = Age,
+    y = notAttrited,
+    label = Department,
+    color = Department
+  )) +
+  geom_text(aes(
+    x = Age,
+    y = attrited,
+    label = newDepartment,
+    color = newDepartment
+  )) +
+  labs(
+    title = "Comparision of Attrited and Not Attrited Employee Number by Department over Age",
+    subtitle = "Age: {frame_along}",
+    x = "",
+    y = ""
+  )+
+  scale_color_manual(values = c("Sales" = "brown4",
+                       "Attrited Sales" = "brown4",
+                       "Human Resources" = "deepskyblue4",
+                       "Attrited Human Resources" = "deepskyblue4",
+                      "Research & Development"="gray65",
+        "Attrited Research & Development"="gray65" )) +
+   theme(legend.position = "none", plot.title = element_text(color = "#006bb3", size=12),plot.subtitle = element_text(color = "#006bb3"))+
+  transition_reveal(as.integer(Age))
+```
+```{r, eval=FALSE, echo=FALSE}
+anim_save("Comparision of Attrited and Not Attrited Employee Number by Department over Age.gif")
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("Comparision of Attrited and Not Attrited Employee Number by Department over Age.gif")
+```
+
 
 
