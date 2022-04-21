@@ -44,7 +44,8 @@ Employee %>%
   labs(title = "Monthly Income Distributions and Attrition Situation", 
        subtitle = "Density Plot",
        x = NULL,
-       y = NULL)
+       y = NULL) + 
+ theme(axis.text.y = element_blank())
 
  Employee %>% 
   group_by(Attrition) %>%
@@ -52,7 +53,7 @@ Employee %>%
 ```
 
 ```{r, fig.alt= "The monthly income distributions by departments and gender using a histogram plot with the brown line showing the mean monthly income by department" }
-Employee_dep <- Employee %>%
+Employee %>%
   group_by(Department) %>%
   summarize(ave_income_dep = mean(MonthlyIncome))
 
