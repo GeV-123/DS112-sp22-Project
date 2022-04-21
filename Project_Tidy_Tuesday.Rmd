@@ -28,26 +28,40 @@ Employee <- read_csv("Employee.csv")
 We found this dataset in Kaggle. It is not a real dataset, but a dataset that is made by a company to mimic the real life situation of employee's income. Thus, there is no NA in the dataset and I hope use the below plot to have a general view towards the distribution of income and to see if there is any difference in the income received based on gender. 
 
 
-```{r, fig.alt= "The monthly income distributions in the dataset using a density plot with the blue line showing the mean monthly income for all workers" }
- Employee %>% 
-  ggplot(aes(x = MonthlyIncome)) +
+```{r, fig.alt= "The monthly income distributions in the dataset using a density plot with the brown line showing the mean monthly income for all workers" }
+ Emp_att <- Employee %>% 
+  group_by(Attrition) %>%
+  summarize(ave_income_att = mean(MonthlyIncome))
+
+Employee %>% 
+  left_join(Emp_att, 
+            by = "Attrition") %>%
+  ggplot(aes(x = MonthlyIncome, color = Attrition)) +
   geom_histogram(aes(y=..density..), color = "#E95C20FF", fill = "#F0B67F", bins = 40) +
-  geom_vline(aes(xintercept = mean(MonthlyIncome)), color = "#4F2C1DFF", size = 1.5) +
+  facet_wrap(vars(Attrition)) + 
+  # geom_vline(aes(xintercept = ave_income_att), color = "#4F2C1DFF", size = 1.5) +
   geom_density(alpha=.5, fill="#006747FF") + 
-  labs(title = "Monthly Income Distributions", 
-       subtitle = "Histogram Plot",
+  labs(title = "Monthly Income Distributions and Attrition Situation", 
+       subtitle = "Density Plot",
        x = NULL,
        y = NULL)
+
+ Employee %>% 
+  group_by(Attrition) %>%
+  summarize(ave_income_att = mean(MonthlyIncome)) 
 ```
-```{r}
+
+```{r, fig.alt= "The monthly income distributions by departments and gender using a histogram plot with the brown line showing the mean monthly income by department" }
 Employee_dep <- Employee %>%
   group_by(Department) %>%
-  mutate(ave_income_dep = mean(MonthlyIncome))
+  summarize(ave_income_dep = mean(MonthlyIncome))
 
- Employee_dep %>% 
+ Employee %>% 
+   left_join(Employee_dep,
+             by= "Department") %>%
   ggplot(aes(x = MonthlyIncome, color = Gender)) +
   geom_histogram(bins = 40, alpha = 0.8 ) +
-  geom_vline(aes(xintercept = mean(ave_income_dep)), color = "#4F2C1DFF", size = 1) +
+  geom_vline(aes(xintercept = ave_income_dep), color = "#4F2C1DFF", size = 1) +
   facet_wrap(vars(Department)) + 
   scale_color_manual(values = c("Female" = "#E95C20FF",
                                 "Male"="#006747FF")) + 
@@ -59,17 +73,21 @@ Employee_dep <- Employee %>%
 ```
 
 
-```{r}
- Employee_dep %>% 
-  ggplot(aes(x = MonthlyIncome, color = Gender)) +
+```{r, fig.alt= "The monthly income distributions by three departments and gender using a box plot with the blue line showing the mean monthly income by department" }
+ Employee %>% 
+   left_join(Employee_dep,
+             by= "Department") %>%
+  ggplot(aes(x = MonthlyIncome, color = Attrition)) +
   geom_boxplot(alpha = 0.2 ) +
-  geom_vline(aes(xintercept = mean(ave_income_dep)), color = "#4F2C1DFF", size = 1) +
+  geom_vline(aes(xintercept = ave_income_dep), color = "#4F2C1DFF", size = 1) +
   facet_wrap(vars (Department)) + 
-  scale_color_manual(values = c("Female" = "#E95C20FF",
-                                "Male"="#006747FF")) + 
-  labs(title = "Monthly Income Distributions by department", 
-       subtitle = "Histogram Plot",
+  scale_color_manual(values = c("Yes" = "#E95C20FF",
+                                "No"="#006747FF")) + 
+  labs(title = "Monthly Income Distributions by department and Attrition Situation", 
+       subtitle = "Box Plot",
        x = NULL,
        y = NULL)
 ```
+
+
 
