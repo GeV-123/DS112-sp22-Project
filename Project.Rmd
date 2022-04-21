@@ -40,7 +40,7 @@ Employee <- read.csv('Employee.csv')
 
 # Monthly Income by department (boxplot)
 
-```{r}
+```{r, fig.alt= "Monthly Income by department (boxplot)"}
  Employee %>% 
   ggplot(aes(x = MonthlyIncome, color = Gender)) +
   geom_boxplot(alpha = 0.2 ) +
@@ -49,7 +49,7 @@ Employee <- read.csv('Employee.csv')
   scale_color_manual(values = c("Female" = "#E95C20FF",
                                 "Male"="#006747FF")) + 
   labs(title = "Monthly Income Distributions by department", 
-       subtitle = "Histogram Plot",
+       subtitle = "Box Plot",
        x = NULL,
        y = NULL)
 ```
@@ -57,7 +57,7 @@ Employee <- read.csv('Employee.csv')
 
 # Average income vs total working years by department
 
-```{r}
+```{r,, fig.alt="Average income vs total working years by department"}
 Employee %>%
   group_by(Department,TotalWorkingYears,Attrition) %>%
   summarize(`Average income` = mean(MonthlyIncome)) %>%
