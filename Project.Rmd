@@ -72,6 +72,7 @@ at + (aty/atn)  +
 
 As shown above, the age range of employees spans widely, all the way from 18 to 60 years old, and the distribution is roughly bell shaped but somewhat left-skewed, with those who age between 25-40 being the major workforce. Overall, we see that those who have left the company tend to be younger than those who haven't with more left-skewness in the age distribution, which is to be expected as younger people with fewer work experiences tend to seek more  potentials by switching jobs, though we find that such difference isn't quite large. In addition, we also find noticeable spikes in age with roughly similar intervals in between. Given the data sample size isn't quite small, we can suspect that there might be certain recruitment reasons on the companies side other than total randomness. One possible reason is that the company might be actively seeking college graduates every other year, which might explain the roughly similarly-spaced spikes.
 
+<<<<<<< HEAD
 
 ## Attrition and Gender
 ```{r,fig.alt="mosaic plot of attrition(y) vs gender(x)"}
@@ -94,10 +95,25 @@ mosaicplot(
   ),
   main="Department vs. Gender"
 )
+=======
+```{r, fig.alt= "Monthly Income by department (boxplot)"}
+ Employee %>% 
+  ggplot(aes(x = MonthlyIncome, color = Gender)) +
+  geom_boxplot(alpha = 0.2 ) +
+  geom_vline(aes(xintercept = mean(MonthlyIncome)), color = "#4F2C1DFF", size = 1) +
+  facet_wrap(vars (Department)) + 
+  scale_color_manual(values = c("Female" = "#E95C20FF",
+                                "Male"="#006747FF")) + 
+  labs(title = "Monthly Income Distributions by department", 
+       subtitle = "Box Plot",
+       x = NULL,
+       y = NULL)
+>>>>>>> cf85ad9f232831e3e0bdcd9bf7af91b0a89633e6
 ```
 
 
 
+<<<<<<< HEAD
 ## Attrition vs. Years at company
 
 To get a sense of typically how long an employee stays in a company, I draw a Kaplan-Meier survival curve of employees, as shown in the graph below.
@@ -124,6 +140,9 @@ One big factor that an employee quits the company is that they are not satisfied
 
 In addition to the current income status, probably even more, employees care about how likely their income would increase in the future. We thus draw the scatter plot below to show the relationship between average monthly income and years at company. If we ignore the outliers who left the company after over 30 years serving for the company, we find that the prospect of pay raise is roughly the same between those both attrition groups, as we see a roughly parallel trend.
 ```{r}
+=======
+```{r,, fig.alt="Average income vs total working years by department"}
+>>>>>>> cf85ad9f232831e3e0bdcd9bf7af91b0a89633e6
 Employee %>%
   group_by(Department,YearsAtCompany,Attrition) %>%
   summarize(`Average income` = mean(MonthlyIncome)) %>%
