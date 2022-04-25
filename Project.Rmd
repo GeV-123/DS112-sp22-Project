@@ -18,6 +18,7 @@ library(gganimate)
 library(gifski) 
 library(transformr) 
 library(patchwork) 
+library(survival)
 
 Employee <- read.csv('Employee.csv')
 
@@ -37,6 +38,8 @@ Employee <- read.csv('Employee.csv')
        x = NULL,
        y = NULL)
 ```
+
+The above plot generally captures the overall income distribution in this company using the histogram plot form while the green part indicates the density over all employees. The dark brown line indicates the mean monthly income for all workers. Overall, the skewed distribution shows that most workers receive a monthly lower than the average, while a few people receive a monthly income far higher than the average income in this company.
 
 # Monthly Income by department (boxplot)
 
@@ -72,4 +75,26 @@ Employee %>%
   theme_classic()+
   labs(x='Total working years')
 ```
+
+In the above graph, we try to explore the relationship between average monthly salary and total working years by department. In this graph, we find that:
+
+1. There is no clear discernable pattern about one department having consistently higher salaries than others;
+2. For human resources in particular, for those with attrition status of 1(YES), there is not datapoint that have worked more than 25 years. We are not surprised given that human resources have the fewest employees in this dataset.
+3. Overall, income is quite positively correlated with total working years; however, individual variation is substantial.
+4. By eyeballing, attrition status might be correlated with income levels within R&D department, but no such pattern is observable within Human Resources of Sales department.
+
+
+# attrition vs total working years (Kaplan Meier survival curve)
+
+```{r}
+es<-Employee%>%
+  mutate(attrition=ifelse(Attrition=="YES",0,1))
+km<-survfit(Surv(YearsAtCompany,attrition)~1,data=es)
+plot(km,conf.int=TRUE)
+```
+
+
+
+
+
 
