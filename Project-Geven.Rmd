@@ -46,23 +46,26 @@ aEmployee <- read.csv('Employee.csv') %>%
 We first wish to explore the age distribution of employees, and in particular, the age differential between those who have left the job and those who haven't.
 
 ```{r,fig.alt="Age distribution of employees. Combination of three plots: the plot of the left includes all employees, the plot on the top right includes those with attrition=YES, the plot on the bottom right includes those with attrition=NO"}
-at<-Employee %>%
-  ggplot(aes(x=Age))+
-  geom_histogram()+
-  theme_classic()+
-  labs(title="All employees",y="")
+at <- Employee %>%
+  ggplot(aes(x = Age)) +
+  geom_histogram(color = "white",
+                 fill = "darkolivegreen4") +
+  theme_classic() +
+  labs(title = "All employees", y = "")
 
 aty<-Employee %>%
   filter(Attrition=="Yes") %>%
   ggplot(aes(x=Age))+
-  geom_histogram()+
+  geom_histogram(color = "white",
+                 fill = "gold1")+
   theme_classic()+
   labs(title="Attrited",y="",x="")
 
 atn<-Employee %>%
   filter(Attrition=="No") %>%
   ggplot(aes(x=Age))+
-  geom_histogram()+
+  geom_histogram(color = "white",
+                 fill = "dodgerblue4")+
   theme_classic()+
   labs(title="Non-attrited",y="")
 
@@ -76,23 +79,33 @@ As shown above, the age range of employees spans widely, all the way from 18 to 
 ## Attrition and Gender
 ```{r,fig.alt="mosaic plot of attrition(y) vs gender(x)"}
 mosaicplot(
-  table(
-    Employee$Gender,
-    Employee$Attrition
-  ),
-  main="Attrition vs. Gender"
+  table(Employee$Gender,
+        Employee$Attrition),
+  main = "Attrition vs. Gender",
+  off = 3,
+  border = "white",
+  color = 6:7,
+  las = 1,
+  cex.axis  = 1
+  
 )
+
+
 ```
 
 In general, the employee attrition rate is about 16%, and we cannot discern an obvious distinction of attrition rate with male and females. We can, however, notice that the company generally employs more males than females. To get a sense of gender distribution across departments, we also draw the mosaic plot below. We find that males have the highest proportion in Human Resource department, though there is also considerable disparity in the other two departments.
 
 ```{r,fig.alt="mosaic plot of department(x) vs gender(y)"}
 mosaicplot(
-  table(
-    Employee$Department,
-    Employee$Gender
-  ),
-  main="Department vs. Gender"
+  table(Employee$Department,
+        Employee$Gender),
+  main = "Department vs. Gender",
+  off = 4,
+  border = "white",
+  color = 13:16,
+  las = 1,
+  cex.axis  = 1
+  
 )
 ```
 
@@ -148,9 +161,10 @@ We look more closely at the percent salary hike by department in the group of bo
 
 ```{r}
 Employee %>%
-  ggplot(aes(y=PercentSalaryHike,x=Attrition)) +
+  ggplot(aes(y=PercentSalaryHike,x=Attrition, fill=Attrition)) +
   geom_boxplot()+
   facet_wrap(~Department)+
+  scale_fill_brewer(palette="Blues")+
   theme_classic()+
   labs(title = "Percent Salary Hike by Department and Attrition",y="")
 ```
