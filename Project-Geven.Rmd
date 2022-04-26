@@ -21,9 +21,7 @@ library(transformr)
 library(patchwork) 
 library(survival)
 
-aEmployee <- read.csv('Employee.csv') %>%
-  mutate(Age=Employee$锘緼ge) %>%
-  select(-锘緼ge)
+
 
 ```
 

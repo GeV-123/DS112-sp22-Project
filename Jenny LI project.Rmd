@@ -71,14 +71,22 @@ newEmployee %>%
     subtitle = "Age: {frame_along}",
     x = "",
     y = ""
-  )+
-  scale_color_manual(values = c("Sales" = "brown4",
-                       "Attrited Sales" = "brown4",
-                       "Human Resources" = "deepskyblue4",
-                       "Attrited Human Resources" = "deepskyblue4",
-                      "Research & Development"="gray65",
-        "Attrited Research & Development"="gray65" )) +
-   theme(legend.position = "none", plot.title = element_text(color = "#006bb3", size=12),plot.subtitle = element_text(color = "#006bb3"))+
+  ) +
+  scale_color_manual(
+    values = c(
+      "Sales" = "brown4",
+      "Attrited Sales" = "brown4",
+      "Human Resources" = "deepskyblue4",
+      "Attrited Human Resources" = "deepskyblue4",
+      "Research & Development" = "gray65",
+      "Attrited Research & Development" = "gray65"
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(color = "#006bb3", size = 10.5,face = "bold",hjust = 1),
+    plot.subtitle = element_text(color = "#006bb3")
+  ) +
   transition_reveal(as.integer(Age))
 ```
 ```{r, eval=FALSE, echo=FALSE}

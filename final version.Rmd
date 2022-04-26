@@ -1,0 +1,328 @@
+---
+title: "STAT112 Project--Employee Attrition"
+author: "Jenny Li, Geven Liu, Wenxuan Zhu"
+date: '2022-04-16'
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    theme: simplex
+    df_print: paged
+    code_download: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r libraries,message = FALSE,warning=FALSE}
+library(tidyverse)
+library(ggmosaic)
+library(lubridate)
+library(ggthemes) 
+library(geofacet)
+library(openintro)
+library(gplots)
+library(RColorBrewer)
+library(ggthemes)     
+library(plotly) 
+library(gganimate)
+library(gifski) 
+library(transformr) 
+library(patchwork) 
+library(survival)
+library(sf)          
+library(ggthemes)      
+library(gganimate)     
+library(transformr)    
+library(gifski)        
+library(readr)
+theme_set(theme_minimal())
+```
+
+# Introduction 
+
+>Our group would like to study employee attrition using the [Employee Attrition dataset](https://www.kaggle.com/datasets/pavansubhasht/ibm-hr-analytics-attrition-dataset) from Kaggle. As there is potentially identifying information about individuals, this dataset is a fictional dataset created by IBM data scientists to protect the privacy, while simulating real employee information in a typical biomedical company.
+
+>In the job market, it is relatively rare for an individual to stay forever in one company for the entire career life. Oftentimes, people move on to a different company, hopefully for better income or treatment potentials; people might have to switch jobs due to family reasons and change of address; in some situations, employees might be forced to leave, either due to company restructuring and layoffs, or just poor individual job performance. Employee attrition could refer to any of the above circumstances and many more, when an employee leaves the company they work for for any reason, both voluntarily or involuntarily.
+
+>Employee attrition, of course, is normal. Certain employee attrition is inevitable--retirement, illness, laying off, etc; but many other types are manageable--the company can always attract employees by making their work enjoyable for them. It is highly important for human resources to keep track of employee attrition statistics, especially in positions where work experience and training is essential. If companies have a high attrition proportion, it might signal poor income potential, poor working environment, or the companies' poor future prospects; and it could often lead to problems such as gap in worker training and discontinuity, which might lead to greater attrition, creating a vicious cycle. Thus, a well-functioning company should consciously keep track of its employee attrition statistics, and seek remedy when attrition statistics seem to go out of control.
+
+## Brief Intro to Data
+>Our Kaggle dataset contains the information of 1470 employees with 35 variables. The variables include employees' demographic variables (binary gender, age, education, marriage status, etc.), career information (job role, job involvement, department, working years, salary, etc.), job satisfaction measure (work-life balance, job/relationship/environment satisfaction), performance rating, and other miscellaneous information. Unfortunately, there is no such variable that informs if the attrition is voluntary or involuntary. However, we could still gather a good amount of information and explore what are the potential factors behind attrition. Given that this is a fictional dataset referring to no specific companies, we will not make any judgements on whether one statistics is too high or one aspect is abnormal; we simply aim to explore potential causes and correlation with attrition status.
+
+```{r Data}
+Employee <- read_csv("Employee.csv")
+```
+
+#Analysis
+##1. Employee Demographics
+###Age
+
+>We first wish to explore the age distribution of employees, and in particular, the age differential between those who have left the job and those who haven't.
+
+```{r,fig.alt="Age distribution of employees. Combination of three plots: the plot of the left includes all employees, the plot on the top right includes those with attrition=YES, the plot on the bottom right includes those with attrition=NO"}
+at <- Employee %>%
+  ggplot(aes(x = Age)) +
+  geom_histogram(color = "white",
+                 fill = "darkolivegreen4") +
+  theme_classic() +
+  labs(title = "All employees", y = "")
+
+aty<-Employee %>%
+  filter(Attrition=="Yes") %>%
+  ggplot(aes(x=Age))+
+  geom_histogram(color = "white",
+                 fill = "gold1")+
+  theme_classic()+
+  labs(title="Attrited",y="",x="")
+
+atn<-Employee %>%
+  filter(Attrition=="No") %>%
+  ggplot(aes(x=Age))+
+  geom_histogram(color = "white",
+                 fill = "dodgerblue4")+
+  theme_classic()+
+  labs(title="Non-attrited",y="")
+
+at + (aty/atn)  + 
+  plot_annotation(title = "Age distribution of employees") 
+```
+
+>As shown above, the age range of employees spans widely, all the way from 18 to 60 years old, and the distribution is roughly bell shaped but somewhat right-skewed, with those who age between 25-40 being the major workforce. Overall, we see that those who have left the company tend to be younger than those who haven't with more left-skewness in the age distribution, which is to be expected as younger people with fewer work experiences tend to seek more potentials by switching jobs, though we find that such difference isn't quite large. In addition, we also find noticeable spikes in age with roughly similar intervals in between. Given the data sample size isn't quite small, we can suspect that there might be certain recruitment reasons on the companies side other than total randomness. One possible reason is that the company might be actively seeking college graduates every other year, which might explain the roughly similarly-spaced spikes.
+
+```{r,eval=FALSE, fig.alt="Comparision of Attrited and Not Attrited Employee Number by Department over Age"}
+newEmployee <- Employee %>%
+  group_by(Department, Age) %>%
+  summarise(attrited = sum(Attrition == "Yes"),
+            notAttrited = sum(Attrition == "No")) %>%
+  mutate(newDepartment = ifelse(
+    Department == "Sales",
+    "Attrited Sales",
+    ifelse(
+      Department == "Human Resources",
+      "Attrited Human Resources",
+      ifelse(
+        Department == "Research & Development",
+        "Attrited Research & Development",
+        "NA"
+      )
+    )
+  ))
+newEmployee %>%
+  ggplot() +
+  geom_line(aes(x = Age, y = attrited, color = Department),
+            size = 1,
+            linetype = "dashed") +
+  geom_line(aes(x = Age, y = notAttrited, color = Department), size = 1) +
+  geom_text(aes(
+    x = Age,
+    y = notAttrited,
+    label = Department,
+    color = Department
+  )) +
+  geom_text(aes(
+    x = Age,
+    y = attrited,
+    label = newDepartment,
+    color = newDepartment
+  )) +
+  labs(
+    title = "Comparision of Attrited and Not Attrited Employee Number by Department over Age",
+    subtitle = "Age: {frame_along}",
+    x = "",
+    y = ""
+  ) +
+  scale_color_manual(
+    values = c(
+      "Sales" = "brown4",
+      "Attrited Sales" = "brown4",
+      "Human Resources" = "deepskyblue4",
+      "Attrited Human Resources" = "deepskyblue4",
+      "Research & Development" = "gray65",
+      "Attrited Research & Development" = "gray65"
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(color = "#006bb3", size = 10.5,face = "bold",hjust = 1),
+    plot.subtitle = element_text(color = "#006bb3")
+  ) +
+  transition_reveal(as.integer(Age))
+```
+
+```{r, eval=FALSE, echo=FALSE}
+anim_save("Comparision of Attrited and Not Attrited Employee Number by Department over Age.gif")
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("Comparision of Attrited and Not Attrited Employee Number by Department over Age.gif")
+```
+
+>Following the line, it is not surprising that it shows a similar pattern when dividing the employees by departments in general. Nevertheless, there are some differences among departments. For Sales, both lines for attrited and not-attrited follow the same progression across age, indicating that attrition mainly follows the change of employee size in the company. Though we are restricted to the small data size for the human resources department, we can tell that age is a more important factor than employee size in describing employee attrition. For the research and development department, we can inspect in two parts. The first part– age 18 to age around 32– both lines progress in a very similar way. In contrast, the two lines start to diverge around age 32: non-attrition increases and decreases while attrition decreases and then remains at a relatively small size of people. One possible explanation is that research and development requires a lot of pre-effort before actually gaining some response. Meaning the time before it is just sunk cost. Thus, some might prefer to stop loss in time by starting a new career when they still have a chance while some others prefer to stay in the field.
+
+###Gender
+```{r,fig.alt="mosaic plot of attrition(y) vs gender(x)"}
+mosaicplot(
+  table(Employee$Gender,
+        Employee$Attrition),
+  main = "Attrition vs. Gender",
+  off = 3,
+  border = "white",
+  color = 6:7,
+  las = 1,
+  cex.axis  = 1
+)
+```
+
+>In general, the employee attrition rate is about 16%, and we cannot discern an obvious distinction of attrition rate between male and females. We can, however, notice that the company generally employs more males than females. To get a sense of gender distribution across departments, we also draw the mosaic plot below. We find that males have the highest proportion in the Human Resource department, though there is also considerable disparity in the other two departments.
+
+```{r,fig.alt="mosaic plot of department(x) vs gender(y)"}
+mosaicplot(
+  table(Employee$Department,
+        Employee$Gender),
+  main = "Department vs. Gender",
+  off = 4,
+  border = "white",
+  color = 13:16,
+  las = 1,
+  cex.axis  = 1
+)
+```
+
+###Attrition vs. years at company
+>To get a sense of typically how long an employee stays in a company, I draw a Kaplan-Meier survival curve of employees, as shown in the graph below.
+
+```{r,fig.alt="Kaplan-Meier survival curve for employee staying within the company. x axis stands for years in company, and yxis stands for the probability that the employee still stays at the company"}
+es<-Employee%>%
+  mutate(attrition=ifelse(Attrition=="YES",0,1))
+km<-survfit(Surv(YearsAtCompany,attrition)~1,data=es)
+plot(km,conf.int=FALSE,main="Kaplan-Meier survival curve of Employee",xlab="Years at company",ylab="Non-attrition probability")
+```
+
+>The x-axis stands for years at a company for an individual, and the y-axis stands for the proportion of employees that still stays at the company, or the "survival" rate of employees. Mathematically, we could represent it as $P(Survival)=1-P({Attrition})$  From the curve, we find that about half of all employees leave the company within 5 years, and only 20% of all employees will stay within the company for ten years.
+
+##2. Relationship between attrition and Income
+>One big factor that an employee quits the company is that they are not satisfied with their income and seek to find other jobs with higher income prospects. For this reason, we wish to explore the overall income status of employees. Note: as the Kaggle dataset did not provide the currency unit for income, we will also not include units for income in our analysis.
+
+```{r, fig.alt= "The monthly income distributions in the dataset using a density plot with the brown line showing the mean monthly income for all workers" }
+ Emp_att <- Employee %>% 
+  group_by(Attrition) %>%
+  summarize(ave_income_att = mean(MonthlyIncome))
+
+Employee %>% 
+  left_join(Emp_att, 
+            by = "Attrition") %>%
+  ggplot(aes(x = MonthlyIncome, color = Attrition)) +
+  geom_histogram(aes(y=..density..), color = "#E95C20FF", fill = "#F0B67F", bins = 40) +
+  facet_wrap(vars(Attrition)) + 
+  # geom_vline(aes(xintercept = ave_income_att), color = "#4F2C1DFF", size = 1.5) +
+  geom_density(alpha=.5, fill="#006747FF") + 
+  labs(title = "Monthly Income Distributions and Attrition Situation", 
+       subtitle = "Density Plot",
+       x = NULL,
+       y = NULL) + 
+ theme(axis.text.y = element_blank())
+
+ Employee %>% 
+  group_by(Attrition) %>%
+  summarize(ave_income_att = mean(MonthlyIncome)) 
+```
+
+>The above histogram describes the overall income distribution by attrition status, with the smoothed green density. Overall, we observe a good amount of income disparity–the skewed distribution shows that most workers receive a monthly income lower than the average, while a few people receive a monthly income far higher than the average income in this company. In addition, we find that the income disparity seems more extreme within the attrited employees with much greater skewness and greater percentage earning less than 5,000 a month, and very small percentage of employees earning over 10,000 left the company. This provides certain evidence that income prospects are quite related with attrition status.
+
+```{r, fig.alt= "The monthly income distributions by three departments and gender using a box plot with the blue line showing the mean monthly income by department" }
+ Employee_dep %>% 
+  ggplot(aes(x = MonthlyIncome, color = Gender)) +
+  geom_boxplot(alpha = 0.2 ) +
+  geom_vline(aes(xintercept = mean(ave_income_dep)), color = "#4F2C1DFF", size = 1) +
+  facet_wrap(vars (Department)) + 
+  scale_color_manual(values = c("Female" = "#E95C20FF",
+                                "Male"="#006747FF")) + 
+  labs(title = "Monthly Income Distributions by department", 
+       subtitle = "Histogram Plot",
+       x = NULL,
+       y = NULL)
+
+```
+
+>We then take a step further into the monthly income distribution by department and attrition status. The boxplots above show that, among the three departments, human resources and research & development departments tend to have greater income inequality as we see relatively larger gaps between the median and the average income (shown by the dark brown line). At the same time, it seems that in these two departments, non-attrited employees tend to have much higher monthly income than those who left the company. Income inequality and attrition/non-attrition differential is less extreme for the sales department, but the lower-interquartile difference is still substantial. Overall, the sales department has the highest average monthly income 6959.2, the human resources department has the second highest average monthly income 6654.5, and the research & development department has the lowest average monthly income 6281.3.
+
+>In addition to the current income status, probably even more, employees care about how likely their income would increase in the future. We thus draw the scatter plot below to show the relationship between average monthly income and years at company. If we ignore the outliers who left the company after over 30 years serving for the company, we find that the prospect of pay raise is roughly the same between those both attrition groups, as we see a roughly parallel trend.
+
+```{r, fig.alt="Average monthly income vs. Years at company "}
+Employee %>%
+  group_by(Department,YearsAtCompany,Attrition) %>%
+  summarize(`Average income` = mean(MonthlyIncome)) %>%
+  ggplot(aes(x=YearsAtCompany)) +
+  geom_point(size=1,
+            aes( y=`Average income`,
+            color=Attrition))+
+  geom_smooth(aes(y=`Average income`,
+             color=Attrition),
+             se = FALSE,size=0.7)+
+#  facet_wrap(~Department)+
+  theme_classic()+
+  labs(x='Total working years',
+       title = "Average monthly income vs. Years at company ",
+       y="Monthly income")
+```
+
+>We look more closely at the percent salary hike by department in the group of boxplots below. The results corroborate the previous graph. Other than the human resources department which have the fewest employees, in both R&D and Sales departments, the income prospects for those who have and haven’t left the company is approximately the same, with very similar median, mean, and interquartile salary hike percentage. Thus, from this data, we don’t think future income prospects play as huge a role in attrition status as the current income.
+
+```{r, fig.alt="Percent Salary Hike by Department and Attrition"}
+Employee %>%
+  ggplot(aes(y=PercentSalaryHike,x=Attrition, fill=Attrition)) +
+  geom_boxplot()+
+  facet_wrap(~Department)+
+  scale_fill_brewer(palette="Blues")+
+  theme_classic()+
+  labs(title = "Percent Salary Hike by Department and Attrition",y="")
+```
+
+##3. Relationship between Job Satisfaction and Attrition
+
+>Probably even more important than income, employees’ overall job satisfaction ratings could potentially tell more about whether they are happy with their job. We thus also wish to explore the relationship between attrition and job satisfaction. In our dataset, job rating has four levels: 1 meaning “low,” 2 meaning “medium,” 3 meaning “high,” 4 meaning “very high.”
+
+```{r, fig.alt="Job Satisfaction by Department And Attrition Status"}
+newEmployeeAttrition <- Employee %>%
+  group_by(Department,JobSatisfaction,Attrition) %>%
+  summarise(number = n())
+
+newEmployeeAttritionPlot<- newEmployeeAttrition  %>% 
+  ggplot(aes(x = JobSatisfaction, y = number,text = paste('Number of People :', number)) )+
+  geom_col(aes( fill = Attrition)) +
+  facet_grid(.~Department)+
+  labs(title = "Job Satisfaction by Department And Attrition Status",
+       x = NULL,
+       y = NULL,
+       fill=NULL) +
+  scale_fill_manual(
+    values = c("firebrick3", "black"),
+    labels = c("Not Attrited", "Attrited")
+  ) +
+ theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(hjust = 0.1, face = "bold", size = 12),
+    axis.text.x = element_text(
+      face = "bold",
+      hjust = 2,
+      vjust = 2
+    )
+  )
+
+
+```
+
+```{r, fig.alt="Job Satisfaction by Department And Attrition Status"}
+ggplotly(newEmployeeAttritionPlot, tooltip = c("text") )
+```
+
+>When looking at job satisfaction, it is unsurprising that the employees who rated “1” would more tend to leave the company in general. In addition, for the human resources department, half of the employees rated “1” attrited. However, it is interesting to note that there are even less employees attrited with rating “2” than other two higher ratings. Moreover, for the other two departments, although the attrition decreases with the increase of rating, the attrition differences among different ratings are not explicit. Thus, job satisfaction might not be a very informative influence when evaluating the attrition. Some possible explanations might be that employees’ rating might vary over time or some might not treat the rating seriously enough to respond with a valid value.
+
+#Conclusion
+
+>Employee attrition is an important piece of information to keep track of for any large company, as it deeply concerns employees’ morale, work environment, and production continuity of the organization. In our Kaggle dataset, overall, we find that employee attrition appears to have the greatest correlation with income levels, while future income prospects and job satisfaction ratings seem less important factors. This has been informative for us and especially for human resources to understand the general trend and explanatory factors of employee attrition. 
+
+>However, we also admittedly face limitations with our dataset. First, while we appreciate that the fictional dataset protects individual privacy, as we cannot identify any specific company, we don’t know how typical our data is and if the data can well represent all similar biomedical companies. Second, since we cannot track whether attrition is voluntary or not, we face restrictions in drawing more meaningful conclusions from our data. If we were able to locate the data more specifically at voluntary attrition, we might be able to more closely identify potential reasons from the companies’ side for employees quitting. Finally, given that our dataset, while reasonably large enough for us to make visual representations, does not contain quite many attrited data points(about over 200), and contains only three departments (Sales, R&D, Human resources), we couldn’t reasonably include all or as many variables as we desire, as that would leave too few data points in each group. 
+
